@@ -38,7 +38,7 @@ jobs:
         # Create an archive directory if it doesn't exist
         mkdir -p pylint-reports-archive
 
-        # Move all the old reports to the archive directory
+        # Move all the old reports to the archive directory, if they exist
         mv pylint-reports/* pylint-reports-archive/ || echo "No old reports to move"
 
     - name: Run Pylint with multiple versions and generate detailed reports
@@ -50,23 +50,26 @@ jobs:
         mkdir -p pylint-reports
 
         # Iterate over all Python files
-        for file in $(git ls-files '*.py'); do
-          if [ -z "$file" ]; then
-            echo "No Python files found. Skipping Pylint run."
-            continue
-          fi
+        python_files=$(git ls-files '*.py')
+        
+        # Check if there are any Python files in the repo
+        if [ -z "$python_files" ]; then
+          echo "No Python files found. Skipping Pylint execution."
+          exit 1
+        fi
 
+        # Iterate over each Python file
+        for file in $python_files; do
           # Initialize the final report file
           report_file="pylint-reports/${file//\//_}_full_report.txt"
           echo "Pylint Full Report for $file" > "$report_file"
           echo "Generated on: $(date)" >> "$report_file"
-          echo "Python Version: 3.10" >> "$report_file"
+          echo "Python Version: 3.10" >> "$report_file"  # Can be dynamic based on setup-python version
           echo "" >> "$report_file"
 
           # Iterate over all Pylint versions sequentially
           for pylint_version in "${pylint_versions[@]}"; do
             # Install the specific version of Pylint
-            echo "Installing Pylint version $pylint_version..."
             pip install pylint==$pylint_version
 
             # Add a section for this Pylint version
@@ -74,18 +77,19 @@ jobs:
             echo "Running Pylint $pylint_version on $file" >> "$report_file"
             echo "" >> "$report_file"
 
-            # Run Pylint and capture the output in JSON format
-            pylint_output=$(pylint --output-format=json "$file" 2>&1)
-            pylint_exit_code=$?
-
-            # Log the Pylint output for debugging purposes
-            echo "Pylint Output for $file (version $pylint_version):" >> "$report_file"
-            echo "$pylint_output" >> "$report_file"
+            # Log the command and configuration
+            echo "Pylint Command: pylint --disable=all --enable=error,warning --output-format=json $file" >> "$report_file"
+            echo "Pylint Configuration: default (no custom config)" >> "$report_file"
             echo "" >> "$report_file"
 
-            # If Pylint ran into issues, handle the exit code and continue
-            if [ $pylint_exit_code -ne 0 ]; then
-              echo "Pylint encountered an error (exit code $pylint_exit_code). Continuing..." >> "$report_file"
+            # Run Pylint and capture the output in JSON format
+            pylint_output=$(pylint  --enable=error,warning --output-format=json "$file" 2>&1)
+
+            # Check for errors during Pylint execution
+            if [ $? -ne 0 ]; then
+              echo "Error during Pylint execution for $file with Pylint $pylint_version:" >> "$report_file"
+              echo "$pylint_output" >> "$report_file"
+              continue
             fi
 
             # Add general statistics to the report
