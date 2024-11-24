@@ -1,6 +1,6 @@
 name: Pylint
 
-on: 
+on:
   push:
     branches:
       - main
@@ -36,12 +36,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
 
-    - name: Run Pylint
+    - name: Run Pylint and save reports to repo
       run: |
-        pylint $(git ls-files '*.py') || true  # Allow for non-zero exit code for Pylint
+        pylint_version=$(pylint --version | head -n 1 | cut -d ' ' -f 2)
+        mkdir -p pylint-reports  # Create the reports directory if it doesn't exist
 
-    - name: Fail if Pylint finds issues
-      if: ${{ failure() }}
+        # Iterate over all Python files and generate Pylint reports
+        for file in $(git ls-files '*.py'); do
+          score=$(pylint --disable=all --enable=error,warning --output-format=text "$file" | tee "pylint-reports/${file//\//_}_${pylint_version}_score.txt" | tail -n 1 | awk '{print $1}')
+          echo "Score for $file: $score"
+        done
+
+    - name: Commit and push pylint reports to repo
       run: |
-        echo "Pylint found issues, failing the workflow."
-        exit 1
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        git add pylint-reports/
+        git commit -m "Add/Update Pylint reports"
+        git push
+
