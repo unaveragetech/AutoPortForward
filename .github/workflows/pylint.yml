@@ -49,8 +49,17 @@ jobs:
         # Create the reports directory for new reports
         mkdir -p pylint-reports
 
-        # Iterate over all Python files
-        for file in $(git ls-files '*.py'); do
+        # Iterate over all Python files (only .py files)
+        python_files=$(git ls-files '*.py')
+        
+        # Check if there are any Python files in the repo
+        if [ -z "$python_files" ]; then
+          echo "No Python files found. Skipping Pylint execution."
+          exit 1
+        fi
+
+        # Iterate over each Python file
+        for file in $python_files; do
           # Initialize the final report file
           report_file="pylint-reports/${file//\//_}_full_report.txt"
           echo "Pylint Full Report for $file" > "$report_file"
@@ -69,7 +78,14 @@ jobs:
             echo "" >> "$report_file"
 
             # Run Pylint and capture the output in JSON format
-            pylint_output=$(pylint --output-format=json "$file")
+            pylint_output=$(pylint --output-format=json "$file" 2>&1)
+
+            # Check for Pylint errors or invalid output
+            if [ $? -ne 0 ]; then
+              echo "Error running Pylint on $file with Pylint version $pylint_version:" >> "$report_file"
+              echo "$pylint_output" >> "$report_file"
+              continue
+            fi
 
             # Add general statistics to the report
             issue_count=$(echo "$pylint_output" | jq '. | length')
