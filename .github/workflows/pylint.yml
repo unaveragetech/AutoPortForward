@@ -11,17 +11,14 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.10'  # Specify the Python version (can be changed)
 
     - name: Cache Python dependencies
       uses: actions/cache@v3
@@ -36,15 +33,27 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
 
-    - name: Run Pylint and save reports to repo
+    - name: Run Pylint with multiple versions
       run: |
-        pylint_version=$(pylint --version | head -n 1 | cut -d ' ' -f 2)
-        mkdir -p pylint-reports  # Create the reports directory if it doesn't exist
+        # Define a list of Pylint versions to run sequentially
+        pylint_versions=("2.13.0" "2.14.0" "2.15.0")  # Add your desired versions here
+        
+        # Create the reports directory
+        mkdir -p pylint-reports
 
-        # Iterate over all Python files and generate Pylint reports
-        for file in $(git ls-files '*.py'); do
-          score=$(pylint --disable=all --enable=error,warning --output-format=text "$file" | tee "pylint-reports/${file//\//_}_${pylint_version}_score.txt" | tail -n 1 | awk '{print $1}')
-          echo "Score for $file: $score"
+        # Run Pylint for each version sequentially
+        for pylint_version in "${pylint_versions[@]}"; do
+          # Install the specific version of Pylint
+          pip install pylint==$pylint_version
+
+          # Capture the pylint version to use in filenames
+          echo "Running Pylint $pylint_version"
+
+          # Iterate over all Python files and generate Pylint reports
+          for file in $(git ls-files '*.py'); do
+            score=$(pylint --disable=all --enable=error,warning --output-format=text "$file" | tee "pylint-reports/${file//\//_}_${pylint_version}_score.txt" | tail -n 1 | awk '{print $1}')
+            echo "Score for $file with Pylint $pylint_version: $score"
+          done
         done
 
     - name: Commit and push pylint reports to repo
@@ -53,6 +62,5 @@ jobs:
         git config user.email "actions@github.com"
         
         git add pylint-reports/
-        git commit -m "Add/Update Pylint reports"
+        git commit -m "Add/Update Pylint reports with multiple versions"
         git push
-
