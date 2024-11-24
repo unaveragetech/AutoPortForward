@@ -1,29 +1,41 @@
 Pylint Full Report for test.py
-Generated on: Sun Nov 24 23:20:06 UTC 2024
+Generated on: Sun Nov 24 23:28:30 UTC 2024
 Python Version: 3.10
 
 ==== Pylint Version: 2.13.0 ====
 Running Pylint 2.13.0 on test.py
 
+Pylint Command: pylint --disable=all --enable=error,warning --output-format=json test.py
+Pylint Configuration: default (no custom config)
+
 Total issues found: 0
 
 === Issues Found ===
+No issues found.
 =====================
 
 ==== Pylint Version: 2.14.0 ====
 Running Pylint 2.14.0 on test.py
 
+Pylint Command: pylint --disable=all --enable=error,warning --output-format=json test.py
+Pylint Configuration: default (no custom config)
+
 Total issues found: 0
 
 === Issues Found ===
+No issues found.
 =====================
 
 ==== Pylint Version: 2.15.0 ====
 Running Pylint 2.15.0 on test.py
 
+Pylint Command: pylint --disable=all --enable=error,warning --output-format=json test.py
+Pylint Configuration: default (no custom config)
+
 Total issues found: 0
 
 === Issues Found ===
+No issues found.
 =====================
 
 ==== End of Report for test.py ====
