@@ -18,7 +18,7 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'  # Specify the Python version (can be changed)
+        python-version: '3.10'
 
     - name: Cache Python dependencies
       uses: actions/cache@v3
@@ -41,7 +41,7 @@ jobs:
         # Move all the old reports to the archive directory
         mv pylint-reports/* pylint-reports-archive/ || echo "No old reports to move"
 
-    - name: Run Pylint with multiple versions
+    - name: Run Pylint with multiple versions and generate detailed reports
       run: |
         # Define a list of Pylint versions to run sequentially
         pylint_versions=("2.13.0" "2.14.0" "2.15.0")  # Add your desired versions here
@@ -49,31 +49,45 @@ jobs:
         # Create the reports directory for new reports
         mkdir -p pylint-reports
 
-        # Run Pylint for each version sequentially
-        for pylint_version in "${pylint_versions[@]}"; do
-          # Install the specific version of Pylint
-          pip install pylint==$pylint_version
+        # Iterate over all Python files
+        for file in $(git ls-files '*.py'); do
+          # Initialize the final report file
+          report_file="pylint-reports/${file//\//_}_full_report.txt"
+          echo "Pylint Full Report for $file" > "$report_file"
+          echo "Generated on: $(date)" >> "$report_file"
+          echo "Python Version: 3.10" >> "$report_file"  # Can be dynamic based on setup-python version
+          echo "" >> "$report_file"
 
-          # Capture the pylint version to use in filenames
-          echo "Running Pylint $pylint_version"
+          # Iterate over all Pylint versions sequentially
+          for pylint_version in "${pylint_versions[@]}"; do
+            # Install the specific version of Pylint
+            pip install pylint==$pylint_version
 
-          # Iterate over all Python files and generate Pylint reports in JSON format
-          for file in $(git ls-files '*.py'); do
-            # Run Pylint and output in JSON format
+            # Add a section for this Pylint version
+            echo "==== Pylint Version: $pylint_version ====" >> "$report_file"
+            echo "Running Pylint $pylint_version on $file" >> "$report_file"
+            echo "" >> "$report_file"
+
+            # Run Pylint and capture the output in JSON format
             pylint_output=$(pylint --disable=all --enable=error,warning --output-format=json "$file")
             
-            # Save the full JSON report
-            echo "$pylint_output" > "pylint-reports/${file//\//_}_${pylint_version}_report.json"
-
-            # Extract and calculate the score (number of issues found)
+            # Add general statistics to the report
             issue_count=$(echo "$pylint_output" | jq '. | length')
-            echo "Found $issue_count issues in $file with Pylint $pylint_version"
+            echo "Total issues found: $issue_count" >> "$report_file"
+            echo "" >> "$report_file"
 
-            # Create a summary report (simple version)
-            echo "Pylint $pylint_version Report for $file" > "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
-            echo "Total issues: $issue_count" >> "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
-            echo "Detailed issues are stored in ${file//\//_}_${pylint_version}_report.json" >> "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
+            # Add detailed issues to the report
+            echo "=== Issues Found ===" >> "$report_file"
+            echo "$pylint_output" | jq -r '.[] | "Type: \(.type)\nMessage: \(.message)\nLine: \(.line)\nColumn: \(.column)\nSymbol: \(.symbol)\nSeverity: \(.category)\n\n"' >> "$report_file"
+
+            # Add a separator between different Pylint versions
+            echo "=====================" >> "$report_file"
+            echo "" >> "$report_file"
           done
+
+          # Add a final summary to the report
+          echo "==== End of Report for $file ====" >> "$report_file"
+          echo "" >> "$report_file"
         done
 
     - name: Commit and push pylint reports to repo
@@ -83,5 +97,5 @@ jobs:
         
         git add pylint-reports/
         git add pylint-reports-archive/
-        git commit -m "Add/Update Pylint reports with multiple versions and detailed JSON reports"
+        git commit -m "Add/Update full Pylint reports with multiple versions"
         git push
