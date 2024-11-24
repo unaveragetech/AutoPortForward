@@ -66,6 +66,7 @@ jobs:
           # Iterate over all Pylint versions sequentially
           for pylint_version in "${pylint_versions[@]}"; do
             # Install the specific version of Pylint
+            echo "Installing Pylint version $pylint_version..."
             pip install pylint==$pylint_version
 
             # Add a section for this Pylint version
@@ -74,9 +75,7 @@ jobs:
             echo "" >> "$report_file"
 
             # Run Pylint and capture the output in JSON format
-            pylint_output=$(pylint -v --output-format=json "$file" 2>&1)
-
-            # Capture the exit code
+            pylint_output=$(pylint --output-format=json "$file" 2>&1)
             pylint_exit_code=$?
 
             # Log the Pylint output for debugging purposes
