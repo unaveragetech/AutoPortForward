@@ -38,7 +38,7 @@ jobs:
         # Create an archive directory if it doesn't exist
         mkdir -p pylint-reports-archive
 
-        # Move all the old reports to the archive directory
+        # Move all the old reports to the archive directory, if they exist
         mv pylint-reports/* pylint-reports-archive/ || echo "No old reports to move"
 
     - name: Run Pylint with multiple versions and generate detailed reports
@@ -70,7 +70,7 @@ jobs:
 
             # Run Pylint and capture the output in JSON format
             pylint_output=$(pylint --disable=all --enable=error,warning --output-format=json "$file")
-            
+
             # Add general statistics to the report
             issue_count=$(echo "$pylint_output" | jq '. | length')
             echo "Total issues found: $issue_count" >> "$report_file"
