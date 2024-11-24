@@ -83,7 +83,7 @@ jobs:
             echo "" >> "$report_file"
 
             # Run Pylint and capture the output in JSON format
-            pylint_output=$(pylint  --enable=error,warning --output-format=json "$file" 2>&1)
+            pylint_output=$(pylint --disable=all --enable=error,warning --output-format=json "$file" 2>&1)
 
             # Check for errors during Pylint execution
             if [ $? -ne 0 ]; then
