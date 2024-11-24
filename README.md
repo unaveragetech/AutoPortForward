@@ -4,7 +4,7 @@
 AutoPortForward/
 │
 ├── port_forward.py        # Main Python script
-├── config.json            # Configuration file (auto-generated if not found)
+├── config.json            # Configuration file (auto-generated if not found Dont use this if its already generated delete it and run the script again for a fresh config)
 ├── blocked_ips.txt        # File to store blocked IPs (auto-generated)
 └── README.md              # Project documentation
 ```
