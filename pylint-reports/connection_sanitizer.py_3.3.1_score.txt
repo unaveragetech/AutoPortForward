@@ -1,0 +1,4 @@
+************* Module Command line
+Command line:1:0: W0012: Unknown option value for '--enable', expected a valid pylint message and got 'error' (unknown-option-value)
+Command line:1:0: W0012: Unknown option value for '--enable', expected a valid pylint message and got 'warning' (unknown-option-value)
+No files to lint: exiting.
