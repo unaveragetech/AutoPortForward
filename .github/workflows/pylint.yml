@@ -57,10 +57,22 @@ jobs:
           # Capture the pylint version to use in filenames
           echo "Running Pylint $pylint_version"
 
-          # Iterate over all Python files and generate Pylint reports
+          # Iterate over all Python files and generate Pylint reports in JSON format
           for file in $(git ls-files '*.py'); do
-            score=$(pylint --disable=all --enable=error,warning --output-format=text "$file" | tee "pylint-reports/${file//\//_}_${pylint_version}_score.txt" | tail -n 1 | awk '{print $1}')
-            echo "Score for $file with Pylint $pylint_version: $score"
+            # Run Pylint and output in JSON format
+            pylint_output=$(pylint --disable=all --enable=error,warning --output-format=json "$file")
+            
+            # Save the full JSON report
+            echo "$pylint_output" > "pylint-reports/${file//\//_}_${pylint_version}_report.json"
+
+            # Extract and calculate the score (number of issues found)
+            issue_count=$(echo "$pylint_output" | jq '. | length')
+            echo "Found $issue_count issues in $file with Pylint $pylint_version"
+
+            # Create a summary report (simple version)
+            echo "Pylint $pylint_version Report for $file" > "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
+            echo "Total issues: $issue_count" >> "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
+            echo "Detailed issues are stored in ${file//\//_}_${pylint_version}_report.json" >> "pylint-reports/${file//\//_}_${pylint_version}_summary.txt"
           done
         done
 
@@ -71,5 +83,5 @@ jobs:
         
         git add pylint-reports/
         git add pylint-reports-archive/
-        git commit -m "Add/Update Pylint reports and archive old reports"
+        git commit -m "Add/Update Pylint reports with multiple versions and detailed JSON reports"
         git push
