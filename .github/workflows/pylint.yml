@@ -69,7 +69,7 @@ jobs:
             echo "" >> "$report_file"
 
             # Run Pylint and capture the output in JSON format
-            pylint_output=$(pylint --disable=all --enable=error,warning --output-format=json "$file")
+            pylint_output=$(pylint --output-format=json "$file")
 
             # Add general statistics to the report
             issue_count=$(echo "$pylint_output" | jq '. | length')
@@ -78,7 +78,11 @@ jobs:
 
             # Add detailed issues to the report
             echo "=== Issues Found ===" >> "$report_file"
-            echo "$pylint_output" | jq -r '.[] | "Type: \(.type)\nMessage: \(.message)\nLine: \(.line)\nColumn: \(.column)\nSymbol: \(.symbol)\nSeverity: \(.category)\n\n"' >> "$report_file"
+            if [ "$issue_count" -gt 0 ]; then
+              echo "$pylint_output" | jq -r '.[] | "Type: \(.type)\nMessage: \(.message)\nLine: \(.line)\nColumn: \(.column)\nSymbol: \(.symbol)\nSeverity: \(.category)\n\n"' >> "$report_file"
+            else
+              echo "No issues found." >> "$report_file"
+            fi
 
             # Add a separator between different Pylint versions
             echo "=====================" >> "$report_file"
