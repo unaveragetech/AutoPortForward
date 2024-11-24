@@ -1,3 +1,0 @@
-Pylint 2.14.0 Report for connection_sanitizer.py
-Total issues: 0
-Detailed issues are stored in connection_sanitizer.py_2.14.0_report.json
