@@ -1,0 +1,3 @@
+Pylint 2.15.0 Report for select_gateway.py
+Total issues: 0
+Detailed issues are stored in select_gateway.py_2.15.0_report.json
