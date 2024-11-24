@@ -1,3 +1,0 @@
-Pylint 2.14.0 Report for port_forward.py
-Total issues: 0
-Detailed issues are stored in port_forward.py_2.14.0_report.json
