@@ -89,6 +89,7 @@ jobs:
             if [ $? -ne 0 ]; then
               echo "Error during Pylint execution for $file with Pylint $pylint_version:" >> "$report_file"
               echo "$pylint_output" >> "$report_file"
+              echo "=====================" >> "$report_file"
               continue
             fi
 
