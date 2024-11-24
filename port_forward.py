@@ -18,6 +18,7 @@ DEFAULT_PORT = 25565
 UPNP_SERVICE = 'TCP'  # TCP is usually used for most applications
 BLOCKED_IPS_FILE = 'blocked_ips.txt'
 MAX_BLOCK_THRESHOLD = 5  # Max number of failed connection attempts to block an IP
+SETUP_COMPLETE_FILE = 'setup_complete.txt'  # The file that indicates setup completion
 
 # Load Configuration or create if it doesn't exist
 def load_config():
@@ -133,8 +134,20 @@ def setup_autorun():
             subprocess.run(f'echo "@reboot python3 {os.path.abspath(__file__)}" | crontab -')
         print("Auto-run setup complete.")
 
+# Check if setup has been completed
+def check_setup():
+    if not os.path.exists(SETUP_COMPLETE_FILE):
+        print("Setup has not been completed. Running setup.bat to install dependencies...")
+        subprocess.run([os.path.join(os.getcwd(), 'setup.bat')])  # Run setup.bat to install dependencies
+        if not os.path.exists(SETUP_COMPLETE_FILE):
+            print("Setup failed. Exiting...")
+            sys.exit(1)
+
 # Main function
 def main():
+    # Ensure setup is complete
+    check_setup()
+
     config = load_config()
     action = sys.argv[1].lower() if len(sys.argv) > 1 else None
 
